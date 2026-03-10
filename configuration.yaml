@@ -1,0 +1,13 @@
+port: 3000
+
+database:
+  url: ${DATABASE_URL}
+
+jwt:
+  access:
+    secret: ${ACCESS_SECRET}
+    expiresIn: ${ACCESS_EXPIRES_IN}
+  refresh:
+    secret: ${REFRESH_SECRET}
+    expiresIn: ${REFRESH_EXPIRES_IN}
+    
