@@ -13,9 +13,134 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum Role {
+  super_admin
+  admin
+}
+
+enum SubRole {
+  head
+  member
+}
+
+enum FileStatus {
+  pending
+  in_circulation
+  rejected
+  approved
+  forwarded
+}
+
+enum NewsStatus {
+  pending
+  published
+}
+
+enum WorkflowStatus {
+  pending
+  approved
+  rejected
+}
+
+// ─────────────────────────────────────────────
+// MODELS
+// ─────────────────────────────────────────────
+
 model User {
-  id    String   @id @default(uuid())
-  email String   @unique
-  name  String?
-  
+  id            String     @id @default(uuid())
+  username      String     @unique
+  password      String
+  role          Role       @default(admin)
+  sub_role      SubRole    @default(member)
+  department    Department @relation(fields: [department_id], references: [id])
+  department_id String
+  profile       Profile?
+  files         File[]
+  news          News[]
+  file_logs     FileLog[]
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+}
+
+model Profile {
+  id         String   @id @default(uuid())
+  first_name String
+  last_name  String
+  email      String   @unique
+  position   String
+  user       User     @relation(fields: [user_id], references: [id])
+  user_id    String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Department {
+  id               String     @id @default(uuid())
+  name             String     @unique
+  users            User[]
+  originated_files File[]     @relation("FileOriginDepartment")
+  current_files    File[]     @relation("FileCurrentDepartment")
+  file_logs_from   FileLog[]  @relation("FileLogFromDepartment")
+  file_logs_to     FileLog[]  @relation("FileLogToDepartment")
+  workflows        WorkFlow[]
+}
+
+model File {
+  id                    String     @id @default(uuid())
+  name                  String
+  file_uri              String
+  owner                 User       @relation(fields: [owner_id], references: [id])
+  owner_id              String
+  origin_department     Department @relation("FileOriginDepartment", fields: [origin_department_id], references: [id])
+  origin_department_id  String
+  current_department    Department @relation("FileCurrentDepartment", fields: [current_department_id], references: [id])
+  current_department_id String
+  status                FileStatus @default(pending)
+  file_logs             FileLog[]
+  workflows             WorkFlow[]
+  created_at            DateTime   @default(now())
+  updated_at            DateTime   @updatedAt
+}
+
+model News {
+  id             String     @id @default(uuid())
+  title          String
+  content        String
+  excerpt        String
+  author         User       @relation(fields: [author_id], references: [id])
+  author_id      String
+  main_image_uri String
+  images         String[]
+  status         NewsStatus @default(pending)
+  published_at   DateTime?
+  created_at     DateTime   @default(now())
+  updated_at     DateTime   @updatedAt
+}
+
+model FileLog {
+  id                 String     @id @default(uuid())
+  user               User       @relation(fields: [user_id], references: [id])
+  user_id            String
+  file               File       @relation(fields: [file_id], references: [id])
+  file_id            String
+  from_department    Department @relation("FileLogFromDepartment", fields: [from_department_id], references: [id])
+  from_department_id String
+  to_department      Department @relation("FileLogToDepartment", fields: [to_department_id], references: [id])
+  to_department_id   String
+  status             FileStatus
+  timestamp          DateTime   @default(now())
+}
+
+model WorkFlow {
+  id            String         @id @default(uuid())
+  file          File           @relation(fields: [file_id], references: [id])
+  file_id       String
+  department    Department     @relation(fields: [department_id], references: [id])
+  department_id String
+  status        WorkflowStatus @default(pending)
+  timestamp     DateTime       @default(now())
 }
