@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from 'src/database/database.service';
 import { User } from 'src/interfaces/user.interface';
 import { CreateUserDto } from './dto/create-users.dto';
@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
+  private readonly logger: Logger = new Logger(UsersService.name);
   constructor(private readonly prisma: DatabaseService) {}
 
   async getAllUsers(): Promise<User[]> {
@@ -103,8 +104,49 @@ export class UsersService {
         email: user.profile?.email,
         position: user.profile?.position,
         message: 'User created successfully',
-        status: HttpStatus.OK,
+        status: HttpStatus.CREATED,
       };
     });
+  }
+  // TODO: Implement update user
+  async updateUser() {}
+
+  /**
+   * @author thatzerroguy
+   * Get all users in a department
+   * @param department_id
+   * @returns
+   */
+  async getUsersInDepartment(department_id: string) {
+    try {
+      const users = await this.prisma.user.findMany({
+        where: {
+          department_id,
+        },
+        include: {
+          profile: true,
+        },
+      });
+      return users.map((user) => ({
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        sub_role: user.sub_role,
+        first_name: user.profile?.first_name,
+        last_name: user.profile?.last_name,
+        email: user.profile?.email,
+        position: user.profile?.position,
+        total_number_of_users: users.length,
+      }));
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(error);
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
