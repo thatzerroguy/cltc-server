@@ -18,13 +18,17 @@ datasource db {
 // ─────────────────────────────────────────────
 
 enum Role {
-  super_admin
-  admin
+  SUPER_ADMIN
+  ADMIN
 }
 
 enum SubRole {
-  head
-  member
+  DG
+  HEAD
+  SECRETARY
+  STAFF
+  COURSE_COORDINATOR
+  COURSE_INTRUCTOR
 }
 
 enum FileStatus {
@@ -54,8 +58,8 @@ model User {
   id            String     @id @default(uuid())
   username      String     @unique
   password      String
-  role          Role       @default(admin)
-  sub_role      SubRole    @default(member)
+  role          Role       @default(ADMIN)
+  sub_role      SubRole    @default(STAFF)
   department    Department @relation(fields: [department_id], references: [id])
   department_id String
   profile       Profile?
