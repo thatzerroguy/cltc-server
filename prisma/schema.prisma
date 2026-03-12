@@ -32,22 +32,27 @@ enum SubRole {
 }
 
 enum FileStatus {
-  pending
-  in_circulation
-  rejected
-  approved
-  forwarded
+  PENDING
+  IN_CIRCULATION
+  REJECTED
+  APPROVED
+  FORWARDED
 }
 
 enum NewsStatus {
-  pending
-  published
+  PENDING
+  PUBLISHED
 }
 
 enum WorkflowStatus {
-  pending
-  approved
-  rejected
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MagazineStatus {
+  PENDING
+  PUBLISHED
 }
 
 // ─────────────────────────────────────────────
@@ -103,7 +108,7 @@ model File {
   origin_department_id  String
   current_department    Department @relation("FileCurrentDepartment", fields: [current_department_id], references: [id])
   current_department_id String
-  status                FileStatus @default(pending)
+  status                FileStatus @default(PENDING)
   file_logs             FileLog[]
   workflows             WorkFlow[]
   created_at            DateTime   @default(now())
@@ -119,7 +124,19 @@ model News {
   author_id      String
   main_image_uri String
   images         String[]
-  status         NewsStatus @default(pending)
+  status         NewsStatus @default(PENDING)
+  published_at   DateTime?
+  created_at     DateTime   @default(now())
+  updated_at     DateTime   @updatedAt
+}
+
+model Magazine {
+  id             String     @id @default(uuid())
+  title          String
+  content        String
+  main_image_uri String
+  images         String[]
+  status         MagazineStatus @default(PENDING)
   published_at   DateTime?
   created_at     DateTime   @default(now())
   updated_at     DateTime   @updatedAt
@@ -145,6 +162,6 @@ model WorkFlow {
   file_id       String
   department    Department     @relation(fields: [department_id], references: [id])
   department_id String
-  status        WorkflowStatus @default(pending)
+  status        WorkflowStatus @default(PENDING)
   timestamp     DateTime       @default(now())
 }
