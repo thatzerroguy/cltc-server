@@ -9,7 +9,7 @@ interface JwtPayload {
   username: string;
 }
 @Injectable()
-export class AccessStrategy extends PassportStrategy(Strategy) {
+export class AccessStrategy extends PassportStrategy(Strategy, 'access') {
   constructor(
     config: ConfigService,
     private readonly prisma: DatabaseService,

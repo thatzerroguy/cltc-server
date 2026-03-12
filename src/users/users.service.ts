@@ -59,12 +59,12 @@ export class UsersService {
       // Check if department exists
       const existing_department = await tx.department.findUnique({
         where: {
-          id: data.department,
+          name: data.department,
         },
       });
       if (!existing_department) {
         throw new HttpException(
-          `Department with id ${data.department} does not exist`,
+          `Department with name ${data.department} does not exist`,
           HttpStatus.NOT_FOUND,
         );
       }
