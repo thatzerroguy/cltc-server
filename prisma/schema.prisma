@@ -28,7 +28,7 @@ enum SubRole {
   SECRETARY
   STAFF
   COURSE_COORDINATOR
-  COURSE_INTRUCTOR
+  COURSE_INSTRUCTOR
 }
 
 enum FileStatus {
@@ -55,24 +55,39 @@ enum MagazineStatus {
   PUBLISHED
 }
 
+enum CourseStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  IN_PROGRESS
+  COMPLETED
+}
+
 // ─────────────────────────────────────────────
 // MODELS
 // ─────────────────────────────────────────────
 
 model User {
-  id            String     @id @default(uuid())
-  username      String     @unique
-  password      String
-  role          Role       @default(ADMIN)
-  sub_role      SubRole    @default(STAFF)
-  department    Department @relation(fields: [department_id], references: [id])
-  department_id String
-  profile       Profile?
-  files         File[]
-  news          News[]
-  file_logs     FileLog[]
-  created_at    DateTime   @default(now())
-  updated_at    DateTime   @updatedAt
+  id                 String      @id @default(uuid())
+  username           String      @unique
+  password           String
+  role               Role        @default(ADMIN)
+  sub_role           SubRole     @default(STAFF)
+  department         Department  @relation(fields: [department_id], references: [id])
+  department_id      String
+  profile            Profile?
+  files              File[]
+  news               News[]
+  file_logs          FileLog[]   @relation("FileLogUser")
+  received_file_logs FileLog[]   @relation("FileLogToUser")
+  workflows          WorkFlow[]  @relation("WorkflowUser")
+  created_at         DateTime    @default(now())
+  updated_at         DateTime    @updatedAt
+
+  // School / course relations
+  coordinated_schools School[] @relation("SchoolCoordinator")
+  instructor_schools  School[] @relation("SchoolInstructors")
+  instructor_courses  Course[] @relation("CourseInstructor")
 }
 
 model Profile {
@@ -144,7 +159,7 @@ model Magazine {
 
 model FileLog {
   id                 String     @id @default(uuid())
-  user               User       @relation(fields: [user_id], references: [id])
+  user               User       @relation("FileLogUser", fields: [user_id], references: [id])
   user_id            String
   file               File       @relation(fields: [file_id], references: [id])
   file_id            String
@@ -152,6 +167,8 @@ model FileLog {
   from_department_id String
   to_department      Department @relation("FileLogToDepartment", fields: [to_department_id], references: [id])
   to_department_id   String
+  to_user            User?      @relation("FileLogToUser", fields: [to_user_id], references: [id])
+  to_user_id         String?
   status             FileStatus
   timestamp          DateTime   @default(now())
 }
@@ -162,6 +179,74 @@ model WorkFlow {
   file_id       String
   department    Department     @relation(fields: [department_id], references: [id])
   department_id String
+  user          User?          @relation("WorkflowUser", fields: [user_id], references: [id])
+  user_id       String?
   status        WorkflowStatus @default(PENDING)
   timestamp     DateTime       @default(now())
+}
+
+model School {
+  id             String   @id @default(uuid())
+  name           String   @unique
+  location       String
+  coordinator    User     @relation("SchoolCoordinator", fields: [coordinator_id], references: [id])
+  coordinator_id String
+
+  instructors User[] @relation("SchoolInstructors")
+  courses     Course[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  aluminis Alumini[]
+}
+
+model Course {
+  id           String        @id @default(uuid())
+  school       School        @relation(fields: [school_id], references: [id])
+  school_id    String
+  title        String
+  description  String
+  duration     String
+  location     String
+  year         String
+  instructor   User          @relation("CourseInstructor", fields: [instructor_id], references: [id])
+  instructor_id String
+  status       CourseStatus  @default(DRAFT)
+  start_date   DateTime
+
+  students   Student[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  aluminis Alumini[]
+}
+
+model Student {
+  id                String   @id @default(uuid())
+  course            Course   @relation(fields: [course_id], references: [id])
+  course_id         String
+  name              String
+  email             String
+  phone             String
+  address           String
+  registration_date DateTime @default(now())
+}
+
+model Alumini {
+  id                String   @id @default(uuid())
+  name              String
+  email             String?
+  phone             String?
+  address           String?
+  school            School   @relation(fields: [school_id], references: [id])
+  school_id         String
+  course            Course   @relation(fields: [course_id], references: [id])
+  course_id         String
+  year_of_participation      DateTime?
+  occupation        String?
+  age               String?
+  gender            String?
+  sponsor           String?
+  image_url         String?
 }

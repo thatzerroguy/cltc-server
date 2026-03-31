@@ -16,11 +16,13 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { SubRoles } from 'src/decorators/sub-roles.decorator';
 import { RolesGuard } from 'src/guard/roles.guard';
 import { SubRolesGuard } from 'src/guard/sub-roles.guard';
+import { UsersViewGuard } from 'src/guard/users-view.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @UseGuards(AuthGuard('access'), UsersViewGuard)
   @Get()
   async getUsers() {
     return await this.usersService.getAllUsers();

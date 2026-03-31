@@ -43,6 +43,37 @@ export class NewsService {
       );
     }
   }
+
+  async getPublishedNews(): Promise<News[]> {
+    try {
+      const news = await this.prisma.news.findMany({
+        where: { status: 'PUBLISHED' },
+        orderBy: { published_at: 'desc' },
+      });
+      return news.map((item) => {
+        return {
+          id: item.id,
+          title: item.title,
+          content: item.content,
+          excerpt: item.excerpt,
+          author_id: item.author_id,
+          main_image_uri: item.main_image_uri,
+          images: item.images,
+          status: item.status,
+          published_at: item.published_at,
+        };
+      });
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(error);
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
   /**
    * @author thatzerroguy
    * @description Creates a new news article
@@ -118,6 +149,35 @@ export class NewsService {
         images: updatedNews.images,
         status: updatedNews.status,
         published_at: updatedNews.published_at,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(error);
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async deleteNews(id: string) {
+    try {
+      const news = await this.prisma.news.findUnique({
+        where: { id },
+      });
+      if (!news) {
+        throw new HttpException('News not found', HttpStatus.NOT_FOUND);
+      }
+
+      await this.prisma.news.delete({
+        where: { id },
+      });
+
+      return {
+        message: 'News deleted successfully',
+        status: HttpStatus.OK,
       };
     } catch (error) {
       if (error instanceof HttpException) {

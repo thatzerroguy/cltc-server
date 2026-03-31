@@ -119,4 +119,77 @@ export class DepartmentService {
       );
     }
   }
+
+  async updateDepartment(department_id: string, data: CreateDepartmentDto) {
+    try {
+      const existing = await this.prisma.department.findUnique({
+        where: { id: department_id },
+      });
+      if (!existing) {
+        throw new HttpException('Department not found', HttpStatus.NOT_FOUND);
+      }
+
+      const duplicate = await this.prisma.department.findFirst({
+        where: {
+          name: data.name,
+          NOT: { id: department_id },
+        },
+      });
+      if (duplicate) {
+        throw new HttpException(
+          'Department already exists',
+          HttpStatus.CONFLICT,
+        );
+      }
+
+      const department = await this.prisma.department.update({
+        where: { id: department_id },
+        data: { name: data.name },
+      });
+
+      return {
+        message: 'Department updated successfully',
+        department,
+        status: HttpStatus.OK,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(error);
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async deleteDepartment(department_id: string) {
+    try {
+      const existing = await this.prisma.department.findUnique({
+        where: { id: department_id },
+      });
+      if (!existing) {
+        throw new HttpException('Department not found', HttpStatus.NOT_FOUND);
+      }
+
+      await this.prisma.department.delete({
+        where: { id: department_id },
+      });
+
+      return {
+        message: 'Department deleted successfully',
+        status: HttpStatus.OK,
+      };
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      this.logger.error(error);
+      throw new HttpException(
+        'Internal Server Error',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }

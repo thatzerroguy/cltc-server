@@ -6,9 +6,10 @@ export const createNewsSchema = z.object({
   excerpt: z.string(),
   author_id: z.string(),
   main_image_uri: z.string(),
-  images: z.array(z.string()),
+  images: z.array(z.string()).default([]),
   status: z.enum(['PENDING', 'PUBLISHED']),
-  published_at: z.date().optional(),
+  // JSON requests send dates as strings; coerce to Date
+  published_at: z.coerce.date().optional(),
 });
 
 export type CreateNewsDto = z.infer<typeof createNewsSchema>;

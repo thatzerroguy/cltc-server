@@ -8,7 +8,7 @@ export type sub_Role =
   | 'SECRETARY'
   | 'STAFF'
   | 'COURSE_COORDINATOR'
-  | 'COURSE_INTRUCTOR';
+  | 'COURSE_INSTRUCTOR';
 
 export const SubRoles = (...sub_roles: sub_Role[]) =>
   SetMetadata(SUB_ROLES_KEY, sub_roles);
